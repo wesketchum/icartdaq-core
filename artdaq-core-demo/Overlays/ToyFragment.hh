@@ -2,7 +2,6 @@
 #define artdaq_demo_Overlays_ToyFragment_hh
 
 #include "artdaq-core/Data/Fragment.hh"
-////#include "artdaq/DAQdata/features.hh"
 #include "cetlib/exception.h"
 
 #include <ostream>
