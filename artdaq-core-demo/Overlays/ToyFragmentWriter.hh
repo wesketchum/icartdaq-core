@@ -40,8 +40,8 @@ public:
   // order to be able to perform writes
 
   Header * header_() {
-    assert(frag_.dataSizeBytes() >= sizeof(Header) );
-    return reinterpret_cast<Header *>(artdaq_Fragment_.dataBeginBytes());
+    assert(artdaq_Fragment_.dataSizeBytes() >= sizeof(Header) );
+    return reinterpret_cast<Header *>( artdaq_Fragment_.dataBeginBytes());
   }
 
   void set_hdr_run_number(Header::run_number_t run_number) { 
@@ -77,7 +77,7 @@ demo::ToyFragmentWriter::ToyFragmentWriter(artdaq::Fragment& f ) :
 
 inline demo::ToyFragment::adc_t * demo::ToyFragmentWriter::dataBegin() {
   // Make sure there's data past the ToyFragment header
-  assert(frag_.dataSizeBytes() >= sizeof(Header) + sizeof(artdaq::Fragment::value_type) );
+  assert(artdaq_Fragment_.dataSizeBytes() >= sizeof(Header) + sizeof(artdaq::Fragment::value_type) );
   return reinterpret_cast<adc_t *>(header_() + 1);
 }
 
