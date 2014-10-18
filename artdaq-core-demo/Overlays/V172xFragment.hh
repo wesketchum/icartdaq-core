@@ -2,7 +2,7 @@
 #define artdaq_demo_Overlays_V172xFragment_hh
 
 #include "artdaq-core/Data/Fragment.hh"
-//#include "artdaq/DAQdata/features.hh"
+#include "artdaq-core/Data/dictionarycontrol.hh"
 
 #include <ostream>
 #include <vector>
@@ -29,9 +29,9 @@ class demo::V172xFragment {
 
       static size_t const size_words = 8ul;
     };
-#if USE_MODERN_FEATURES
+#if HIDE_FROM_ROOT
     static_assert (sizeof (metadata) == metadata::size_words * sizeof (metadata::data_t), "metadata size changed");
-#endif /* USE_MODERN_FEATURES */
+#endif /* HIDE_FROM_ROOT */
 
     struct Header {
       typedef uint32_t data_t;
@@ -83,15 +83,15 @@ class demo::V172xFragment {
     adc_type const * findBadADC(int daq_adc_bits) const;
     void checkADCData(int daq_adc_bits) const; // Throws on failure.
 
-#if USE_MODERN_FEATURES
+#if HIDE_FROM_ROOT
     static constexpr size_t header_size_words();
     static constexpr size_t adc_range(int daq_adc_bits);
-#endif /* USE_MODERN_FEATURES */
+#endif /* HIDE_FROM_ROOT */
 
 protected:
-#if USE_MODERN_FEATURES
+#if HIDE_FROM_ROOT
   static constexpr size_t adcs_per_word_();
-#endif /* USE_MODERN_FEATURES */
+#endif /* HIDE_FROM_ROOT */
 
   Header const * header_() const;
 
@@ -114,11 +114,11 @@ inline demo::V172xFragment::Header::event_counter_t demo::V172xFragment::event_c
 
 inline demo::V172xFragment::Header::trigger_time_tag_t demo::V172xFragment::trigger_time_tag() const { return header_()->trigger_time_tag; }
 
-#if USE_MODERN_FEATURES
+#if HIDE_FROM_ROOT
 inline size_t demo::V172xFragment::total_adc_values() const {
   return (event_size() - header_size_words()) * adcs_per_word_();
 }
-#endif /* USE_MODERN_FEATURES */
+#endif /* HIDE_FROM_ROOT */
 
 inline size_t demo::V172xFragment::adc_values_for_channel() const { return total_adc_values() / enabled_channels(); }
 
@@ -134,7 +134,7 @@ inline demo::V172xFragment::adc_type const * demo::V172xFragment::chDataEnd(int 
     return chDataBegin (ch) + adc_values_for_channel ();
 }
 
-#if USE_MODERN_FEATURES
+#if HIDE_FROM_ROOT
 
 inline bool demo::V172xFragment::fastVerify(int daq_adc_bits) const {
   return (findBadADC(daq_adc_bits) == dataEnd());
@@ -156,6 +156,6 @@ inline demo::V172xFragment::Header const * demo::V172xFragment::header_() const 
   return reinterpret_cast<V172xFragment::Header const *>(data_.dataBeginBytes());
 }
 
-#endif /* USE_MODERN_FEATURES */
+#endif /* HIDE_FROM_ROOT */
 
 #endif /* artdaq_demo_Overlays_V172xFragment_hh */
