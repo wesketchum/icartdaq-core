@@ -13,6 +13,7 @@ namespace demo {
         V1190,
 	TOY1,
 	TOY2,
+        ASCII,
         INVALID // Should always be last.
         };
 
