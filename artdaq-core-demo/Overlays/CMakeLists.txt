@@ -1,4 +1,6 @@
-art_make(LIB_LIBRARIES
+art_make( BASENAME_ONLY
+  LIBRARY_NAME artdaq-core-demo_Overlays
+  LIB_LIBRARIES
   ${ARTDAQ_DAQDATA}
   ${CETLIB}
   )
