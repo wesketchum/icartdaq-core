@@ -10,7 +10,6 @@
 # use cmake 2.8 or later
 cmake_minimum_required (VERSION 2.8)
 
-project(artdaq-core-demo)
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
 IF (NOT CETBUILDTOOLS_VERSION)
@@ -36,7 +35,7 @@ cet_report_compiler_flags()
 
 # these are minimum required versions, not the actual product versions
 find_ups_product( cetbuildtools v3_03_00 )
-find_ups_product( artdaq v0_04_02 )
+#find_ups_product( artdaq v0_04_02 )
 find_ups_product( artdaq_core v1_00_00 )
 find_ups_product( art v1_06_00 )
 #find_ups_product( fhiclcpp v2_16_00 )
