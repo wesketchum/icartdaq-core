@@ -14,6 +14,7 @@ namespace demo {
 	TOY1,
 	TOY2,
         ASCII,
+        UDP,
         INVALID // Should always be last.
         };
 
