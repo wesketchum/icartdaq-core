@@ -43,11 +43,11 @@ class demo::CAEN2795Fragment {
   struct Metadata {
 
     typedef uint32_t data_t;
-
+    
     data_t channels_per_board : 12;
     data_t num_boards         : 12;
     data_t num_adc_bits       : 8;
-
+    
     static size_t const size_words = 1ul; // Units of Metadata::data_t
   };
 
