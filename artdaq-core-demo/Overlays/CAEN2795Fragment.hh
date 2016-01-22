@@ -24,6 +24,7 @@ class demo::CAEN2795Fragment {
 
   //events from readout start with 32-bit word containing event number,
   //and 32-bit word containing timestamp
+  //This is the header in the hardware
   struct CAEN2795Header{
     uint32_t ev_num : 24;
     uint32_t unused1 : 8;
@@ -32,43 +33,24 @@ class demo::CAEN2795Fragment {
   };
 
 
-  // The "Metadata" struct is used to store info primarily related to
-  // the upstream hardware environment from where the fragment came
-
-  // "data_t" is a typedef of the fundamental unit of data the
-  // metadata structure thinks of itself as consisting of; it can give
-  // its size via the static "size_words" variable (
-  // ToyFragment::Metadata::size_words )
-
+  //hardware-specific metadata
   struct Metadata {
 
-    typedef uint32_t data_t;
+    typedef uint32_t data_t; //fundamental unit of metadata
     
-    data_t channels_per_board : 12;
-    data_t num_boards         : 12;
-    data_t num_adc_bits       : 8;
+    data_t samples_per_channel;
+
+    data_t num_adc_bits        : 8;
+    data_t channels_per_board  : 12;
+    data_t num_boards          : 12;
     
-    static size_t const size_words = 1ul; // Units of Metadata::data_t
+    static size_t const size_words = 2ul; // Units of Metadata::data_t
   };
 
   static_assert (sizeof (Metadata) == Metadata::size_words * sizeof (Metadata::data_t), "CAEN2795Fragment::Metadata size changed");
 
 
-  // The "Header" struct contains "metadata" specific to the fragment
-  // which is not hardware-related
-
-  // Header::data_t -- not to be confused with Metadata::data_t ! --
-  // describes the standard size of a data type not just for the
-  // header data, but ALSO the physics data beyond it; the size of the
-  // header in units of Header::data_t is given by "size_words", and
-  // the size of the fragment beyond the header in units of
-  // Header::data_t is given by "event_size"
-
-  // Notice only the first 28 bits of the first 32-bit unsigned
-  // integer in the Header is used to hold the event_size ; this means
-  // that you can't represent a fragment larger than 2**28 units of
-  // data_t, or 1,073,741,824 bytes
-
+  //non-hardware-specific metadata
   struct Header {
     typedef uint32_t data_t;
 
@@ -85,16 +67,22 @@ class demo::CAEN2795Fragment {
 
   static_assert (sizeof (Header) == Header::size_words * sizeof (Header::data_t), "ToyFragment::Header size changed");
 
+
   // The constructor simply sets its const private member "artdaq_Fragment_"
   // to refer to the artdaq::Fragment object
 
   CAEN2795Fragment(artdaq::Fragment const & f) : artdaq_Fragment_(f) {}
+
+
+
 
   // const getter functions for the data in the header
 
   Header::event_size_t hdr_event_size() const { return header_()->event_size; } 
   Header::run_number_t hdr_run_number() const { return header_()->run_number; }
   static constexpr size_t hdr_size_words() { return Header::size_words; }
+
+
 
   // The number of ADC values describing data beyond the header
   size_t total_adc_values() const {
@@ -103,8 +91,7 @@ class demo::CAEN2795Fragment {
 
   //Start of the CAEN2795 firmware Header, returned as a pointer
   //Defaults to the header for the master board.
-  CAEN2795Header const * CAEN2795_hdr(uint16_t) const//;
-  { return reinterpret_cast<CAEN2795Header const *>(header_() + 1); }
+  CAEN2795Header const * CAEN2795_hdr(uint16_t b=0) const;
 
   uint32_t CAEN2795_hdr_ev_num(uint16_t b=0)  { return CAEN2795_hdr(b)->ev_num; }
   uint32_t CAEN2795_hdr_time_st(uint16_t b=0) { return CAEN2795_hdr(b)->time_st; }
@@ -117,33 +104,18 @@ class demo::CAEN2795Fragment {
 
   // End of the ADC values, returned as a pointer to the ADC type
   adc_t const * dataEnd(uint16_t b=0) const//;
-  { return dataBegin(b) + total_adc_values(); }
+  { return (dataBegin(b) + adcs_per_board_() - sizeof(CAEN2795Header)/sizeof(adc_t)); }
 
-  // Functions to check if any ADC values are corrupt
 
-  // findBadADC() checks to make sure that the ADC type (adc_t) variable
-  // holding the ADC value doesn't contain bits beyond the expected
-  // range, i.e., can't be evaluated to a larger value than the max
-  // permitted ADC value
-
-  adc_t const * findBadADC(int daq_adc_bits) const {
-    return std::find_if(dataBegin(), dataEnd(), 
-			[&](adc_t const adc) -> bool { 
-			  return (adc >> daq_adc_bits); });
+  // Start of the ADC values, returned as a pointer to the ADC type
+  adc_t const * dataTotalBegin() const {
+    return reinterpret_cast<adc_t const *>(header_() + 1);
   }
 
-  bool fastVerify(int daq_adc_bits) const {
-    return (findBadADC(daq_adc_bits) == dataEnd());
-  };
+  // End of the ADC values, returned as a pointer to the ADC type
+  adc_t const * dataTotalEnd() const//;
+  { return dataTotalBegin() + total_adc_values(); }
 
-  // Defined in CAEN2795Fragment.cc, this throws if any ADC appears corrupt
-  void checkADCData(int daq_adc_bits) const; 
-
-
-  // Largest ADC value possible
-  size_t adc_range(int daq_adc_bits) {
-    return (1ul << daq_adc_bits );
-  }
 
   protected:
 
@@ -159,6 +131,11 @@ class demo::CAEN2795Fragment {
   // header_() simply takes the address of the start of this overlay's
   // data (i.e., where the CAEN2795Fragment::Header object begins) and
   // casts it as a pointer to CAEN2795Fragment::Header
+
+  size_t adcs_per_board_() const {
+    return ( metadata_()->samples_per_channel*metadata_()->channels_per_board + 
+	     sizeof(CAEN2795Header)/sizeof(adc_t) ); 
+  }
 
   Header const * header_() const {
     return reinterpret_cast<CAEN2795Fragment::Header const *>(artdaq_Fragment_.dataBeginBytes());

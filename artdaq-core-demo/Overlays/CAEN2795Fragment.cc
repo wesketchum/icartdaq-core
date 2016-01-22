@@ -12,17 +12,10 @@ namespace {
 }
 #endif
 
-void demo::CAEN2795Fragment::checkADCData(int daq_adc_bits) const {
-  demo::CAEN2795Fragment::adc_t const * adcPtr(findBadADC(daq_adc_bits));
-  if (adcPtr != dataEnd()) {
-    throw cet::exception("IllegalADCVal")
-        << "Illegal value of ADC word #"
-        << (adcPtr - dataBegin())
-        << ": 0x"
-        << std::hex
-        << *adcPtr
-        << ".";
-  }
+demo::CAEN2795Fragment::CAEN2795Header const * demo::CAEN2795Fragment::CAEN2795_hdr(uint16_t b) const 
+{
+  return ( reinterpret_cast<CAEN2795Header const *>(header_() + 1) + 
+	   b*adcs_per_board_()*sizeof(adc_t)/sizeof(CAEN2795Header));
 }
 
 std::ostream & demo::operator << (std::ostream & os, CAEN2795Fragment const & f) {

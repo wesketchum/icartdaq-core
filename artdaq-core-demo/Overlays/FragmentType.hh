@@ -15,6 +15,7 @@ namespace demo {
 	TOY2,
         ASCII,
         UDP,
+	CAEN2795,
         INVALID // Should always be last.
         };
 
