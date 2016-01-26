@@ -1,4 +1,4 @@
-#include "artdaq-core-demo/Overlays/AsciiFragment.hh"
+#include "icartdaq-core/Overlays/CAEN2795Fragment.hh"
 
 #include "cetlib/exception.h"
 
@@ -12,11 +12,12 @@ namespace {
 }
 #endif
 
-std::ostream & demo::operator << (std::ostream & os, AsciiFragment const & f) {
-  os << "AsciiFragment event size: "
+
+std::ostream & demo::operator << (std::ostream & os, CAEN2795Fragment const & f) {
+  os << "CAEN2795Fragment event size: "
      << f.hdr_event_size()
-     << ", line number: "
-     << f.hdr_line_number()
+     << ", run number: "
+     << f.hdr_run_number()
      << "\n";
 
   return os;

@@ -91,7 +91,11 @@ class demo::CAEN2795Fragment {
 
   //Start of the CAEN2795 firmware Header, returned as a pointer
   //Defaults to the header for the master board.
-  CAEN2795Header const * CAEN2795_hdr(uint16_t b=0) const;
+  CAEN2795Header const * CAEN2795_hdr(uint16_t b=0) const {
+    return ( reinterpret_cast<CAEN2795Header const *>(header_() + 1) + 
+	     b*adcs_per_board_()*sizeof(adc_t)/sizeof(CAEN2795Header));
+  }
+
 
   uint32_t CAEN2795_hdr_ev_num(uint16_t b=0)  { return CAEN2795_hdr(b)->ev_num; }
   uint32_t CAEN2795_hdr_time_st(uint16_t b=0) { return CAEN2795_hdr(b)->time_st; }

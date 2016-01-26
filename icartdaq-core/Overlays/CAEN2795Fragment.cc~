@@ -12,11 +12,6 @@ namespace {
 }
 #endif
 
-demo::CAEN2795Fragment::CAEN2795Header const * demo::CAEN2795Fragment::CAEN2795_hdr(uint16_t b) const 
-{
-  return ( reinterpret_cast<CAEN2795Header const *>(header_() + 1) + 
-	   b*adcs_per_board_()*sizeof(adc_t)/sizeof(CAEN2795Header));
-}
 
 std::ostream & demo::operator << (std::ostream & os, CAEN2795Fragment const & f) {
   os << "CAEN2795Fragment event size: "

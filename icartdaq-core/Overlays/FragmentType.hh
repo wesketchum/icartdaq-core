@@ -1,5 +1,5 @@
-#ifndef artdaq_demo_Overlays_FragmentType_hh
-#define artdaq_demo_Overlays_FragmentType_hh
+#ifndef icartdaq_core_Overlays_FragmentType_hh
+#define icartdaq_core_Overlays_FragmentType_hh
 #include "artdaq-core/Data/Fragment.hh"
 
 namespace demo {
@@ -7,14 +7,6 @@ namespace demo {
   namespace detail {
     enum FragmentType : artdaq::Fragment::type_t
     { MISSED = artdaq::Fragment::FirstUserFragmentType,
-        V1495,
-        V1720,
-        V1724,
-        V1190,
-	TOY1,
-	TOY2,
-        ASCII,
-        UDP,
 	CAEN2795,
         INVALID // Should always be last.
         };

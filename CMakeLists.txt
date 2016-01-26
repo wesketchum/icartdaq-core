@@ -1,11 +1,13 @@
 # ======================================================================
-#  darkart main build file
+#  icartdaq_core main build file
 #
 #  cd .../path/to/build/directory
 #  source .../path/to/artdaq-demo/ups/setup_for_development
 #  buildtool
 # ======================================================================
 
+
+project(icartdaq_core)
 
 # use cmake 2.8 or later
 cmake_minimum_required (VERSION 2.8)
@@ -60,7 +62,7 @@ include(ArtMake)
 include(CetTest)
 
 # source
-add_subdirectory(artdaq-core-demo)
+add_subdirectory(icartdaq-core)
 
 # JCF, 8/19/14
 # As of yet, no tests exist for this package
