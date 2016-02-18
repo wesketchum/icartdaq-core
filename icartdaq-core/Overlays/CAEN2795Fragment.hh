@@ -1,151 +1,157 @@
-#ifndef artdaq_demo_Overlays_CAEN2795Fragment_hh
-#define artdaq_demo_Overlays_CAEN2795Fragment_hh
+#ifndef icartdaq_Overlays_CAEN2795Fragment_hh
+#define icartdaq_Overlays_CAEN2795Fragment_hh
 
 #include "artdaq-core/Data/Fragment.hh"
 #include "cetlib/exception.h"
 
-#include <ostream>
+#include <iostream>
 #include <vector>
 
 // Implementation of "CAEN2795Fragment", an artdaq::Fragment overlay class
 // used for ICARUS DAQ demo
 
-namespace demo {
+namespace icarus {
   class CAEN2795Fragment;
-
-  // Let the "<<" operator dump the ToyFragment's data to stdout
   std::ostream & operator << (std::ostream &, CAEN2795Fragment const &);
+
+  class CAEN2795FragmentMetadata;
+  std::ostream & operator << (std::ostream &, CAEN2795FragmentMetadata const&);
 }
 
-class demo::CAEN2795Fragment {
+class icarus::CAEN2795FragmentMetadata {
+
+public:
+
+  typedef uint32_t data_t; //fundamental unit of metadata
+  typedef data_t   id_t; //type for board IDs
+
+
+  CAEN2795FragmentMetadata(){}
+
+  CAEN2795FragmentMetadata(data_t run, data_t subrun, data_t event, 
+			   data_t samples, uint8_t n_adc_bits, 
+			   uint16_t n_channels, uint16_t n_boards, 
+			   data_t crate_id)
+    : _run_number(run), 
+      _subrun_number(subrun),
+      _event_number(event),
+      _samples_per_channel(samples),
+      _num_adc_bits(n_adc_bits),
+      _channels_per_board(n_channels&0xfff),
+      _num_boards(n_boards&0xfff),
+      _crate_id(crate_id),
+      _reserved(0xfcdf)
+  { UpdateBoardIDSize(); }
+
+  CAEN2795FragmentMetadata(data_t run, data_t subrun, data_t event, 
+			   data_t samples, uint8_t n_adc_bits, 
+			   uint16_t n_channels, uint16_t n_boards, 
+			   data_t crate_id, std::vector<id_t> board_ids)
+    : _run_number(run), 
+      _subrun_number(subrun),
+      _event_number(event),
+      _samples_per_channel(samples),
+      _num_adc_bits(n_adc_bits),
+      _channels_per_board(n_channels&0xfff),
+      _num_boards(n_boards&0xfff),
+      _crate_id(crate_id),
+      _reserved(0xfcdf)
+  { UpdateBoardIDSize(); SetBoardIDs(board_ids); }
+
+  data_t const& run_number() const { return _run_number; }
+  data_t const& subrun_number() const { return _subrun_number; }
+  data_t const& event_number() const { return _event_number; }
+
+  data_t const& samples_per_channel() const { return _samples_per_channel; }
+  data_t num_adc_bits() const { return _num_adc_bits; }
+  data_t channels_per_board() const { return _channels_per_board; }
+  data_t num_boards() const { return _num_boards; }
+  
+  data_t crate_id() const { return _crate_id; }
+  data_t reserved() const { return _reserved; }
+
+  id_t   const& board_id(size_t i) const
+  { BoardExists(i); return _board_ids[i]; }
+
+  void SetRunNumber( data_t r ) { _run_number = r; }
+  void SetSubrunNumber( data_t s ) { _subrun_number = s; }
+  void SetEventNumber( data_t e ) { _event_number = e; }
+
+  void  SetBoardID(size_t i,id_t id)
+  { BoardExists(i); _board_ids[i] = id; }
+  void  SetBoardIDs(std::vector<id_t> const& idvec)
+  { CheckNBoards(idvec.size()); _board_ids = idvec; } 
+
+  void BoardExists(size_t i) const;
+  void CheckNBoards(size_t i) const;
+
+  size_t ExpectedDataSize() const 
+  { return _num_boards*(2*sizeof(uint32_t)+_channels_per_board*_samples_per_channel*sizeof(uint16_t)); }
+
+
+private:
+
+  data_t _run_number;
+  data_t _subrun_number;
+  data_t _event_number;
+
+  data_t _samples_per_channel;
+  
+  data_t _num_adc_bits;
+  data_t _channels_per_board;
+  data_t _num_boards;
+
+  data_t _crate_id;
+  data_t _reserved;
+
+  std::vector<id_t> _board_ids;
+  
+  void UpdateBoardIDSize(){ _board_ids.resize(_num_boards); }
+
+};
+
+
+class icarus::CAEN2795Fragment {
   public:
 
-  typedef uint16_t adc_t; //using 16 bit words for the adc
-
-  //events from readout start with 32-bit word containing event number,
-  //and 32-bit word containing timestamp
-  //This is the header in the hardware
-  struct CAEN2795Header{
-    uint32_t ev_num : 24;
-    uint32_t unused1 : 8;
-
-    uint32_t time_st;
-  };
-
-
-  //hardware-specific metadata
-  struct Metadata {
-
-    typedef uint32_t data_t; //fundamental unit of metadata
+  struct CAEN2795BoardBlock {
     
-    data_t samples_per_channel;
-
-    data_t num_adc_bits        : 8;
-    data_t channels_per_board  : 12;
-    data_t num_boards          : 12;
+    uint32_t event_number : 24;
+    uint32_t unused1      :  8;
+    uint32_t time_stamp;
     
-    static size_t const size_words = 2ul; // Units of Metadata::data_t
+    uint16_t* data;
+    
   };
-
-  static_assert (sizeof (Metadata) == Metadata::size_words * sizeof (Metadata::data_t), "CAEN2795Fragment::Metadata size changed");
-
-
-  //non-hardware-specific metadata
-  struct Header {
-    typedef uint32_t data_t;
-
-    typedef uint32_t event_size_t;  
-    typedef uint32_t run_number_t;
-
-    event_size_t event_size : 28;
-    event_size_t unused_1   :  4;
-
-    run_number_t run_number : 32;
-
-    static size_t const size_words = 2ul; // Units of Header::data_t
-  };
-
-  static_assert (sizeof (Header) == Header::size_words * sizeof (Header::data_t), "ToyFragment::Header size changed");
-
-
-  // The constructor simply sets its const private member "artdaq_Fragment_"
-  // to refer to the artdaq::Fragment object
 
   CAEN2795Fragment(artdaq::Fragment const & f) : artdaq_Fragment_(f) {}
 
+  CAEN2795FragmentMetadata const * metadata() const { return artdaq_Fragment_.metadata<CAEN2795FragmentMetadata>(); }
 
+  size_t nBoards() const { return metadata()->num_boards(); }
+  size_t nChannels() const { return metadata()->num_boards()*metadata()->channels_per_board(); }
+  size_t nSamplesPerChannel() const { return metadata()->samples_per_channel(); }
+  size_t nChannelsPerBoard() const { return metadata()->channels_per_board(); }
 
+  //typedef CAEN2795BoardBlock<metadata()->samples_per_channel(),metadtat()->channels_per_board()> CAEN2795BoardBlock_t;
 
-  // const getter functions for the data in the header
+  size_t BoardBlockSize() const { return 2*sizeof(uint32_t)+nChannelsPerBoard()*nSamplesPerChannel()*sizeof(uint16_t); }
+  size_t DataPayloadSize() const { return artdaq_Fragment_.dataSizeBytes(); }
 
-  Header::event_size_t hdr_event_size() const { return header_()->event_size; } 
-  Header::run_number_t hdr_run_number() const { return header_()->run_number; }
-  static constexpr size_t hdr_size_words() { return Header::size_words; }
-
-
-
-  // The number of ADC values describing data beyond the header
-  size_t total_adc_values() const {
-    return (hdr_event_size() - hdr_size_words()) * adcs_per_word_();
+  CAEN2795BoardBlock const * CAEN2795Board(uint16_t b) const {
+    metadata()->BoardExists(b);
+    return ( reinterpret_cast< CAEN2795BoardBlock const *>
+	     (artdaq_Fragment_.dataBeginBytes() + b*BoardBlockSize()) );
   }
+  
+  uint32_t BoardEventNumber(uint16_t b) const { return CAEN2795Board(b)->event_number; }
+  uint32_t BoardTimeStamp(uint16_t b) const { return CAEN2795Board(b)->time_stamp; }
+  uint16_t const* BoardData(uint16_t b) const { return CAEN2795Board(b)->data; }
 
-  //Start of the CAEN2795 firmware Header, returned as a pointer
-  //Defaults to the header for the master board.
-  CAEN2795Header const * CAEN2795_hdr(uint16_t b=0) const {
-    return ( reinterpret_cast<CAEN2795Header const *>(header_() + 1) + 
-	     b*adcs_per_board_()*sizeof(adc_t)/sizeof(CAEN2795Header));
-  }
+  uint16_t adc_val(size_t b,size_t c, size_t s) const 
+  { return ( *(CAEN2795Board(b)->data+s*nChannelsPerBoard()+c) & (~(1<<(metadata()->num_adc_bits()+1))) ); }
 
-
-  uint32_t CAEN2795_hdr_ev_num(uint16_t b=0)  { return CAEN2795_hdr(b)->ev_num; }
-  uint32_t CAEN2795_hdr_time_st(uint16_t b=0) { return CAEN2795_hdr(b)->time_st; }
-
-
-  // Start of the ADC values, returned as a pointer to the ADC type
-  adc_t const * dataBegin(uint16_t b=0) const {
-    return reinterpret_cast<adc_t const *>(CAEN2795_hdr(b) + 1);
-  }
-
-  // End of the ADC values, returned as a pointer to the ADC type
-  adc_t const * dataEnd(uint16_t b=0) const//;
-  { return (dataBegin(b) + adcs_per_board_() - sizeof(CAEN2795Header)/sizeof(adc_t)); }
-
-
-  // Start of the ADC values, returned as a pointer to the ADC type
-  adc_t const * dataTotalBegin() const {
-    return reinterpret_cast<adc_t const *>(header_() + 1);
-  }
-
-  // End of the ADC values, returned as a pointer to the ADC type
-  adc_t const * dataTotalEnd() const//;
-  { return dataTotalBegin() + total_adc_values(); }
-
-
-  protected:
-
-  // Functions to translate between size (in bytes) of an ADC, size of
-  // this fragment overlay's concept of a unit of data (i.e.,
-  // Header::data_t) and size of an artdaq::Fragment's concept of a
-  // unit of data (the artdaq::Fragment::value_type).
-
-  static constexpr size_t adcs_per_word_() {
-    return sizeof(Header::data_t) / sizeof(adc_t);
-  }
-
-  // header_() simply takes the address of the start of this overlay's
-  // data (i.e., where the CAEN2795Fragment::Header object begins) and
-  // casts it as a pointer to CAEN2795Fragment::Header
-
-  size_t adcs_per_board_() const {
-    return ( metadata_()->samples_per_channel*metadata_()->channels_per_board + 
-	     sizeof(CAEN2795Header)/sizeof(adc_t) ); 
-  }
-
-  Header const * header_() const {
-    return reinterpret_cast<CAEN2795Fragment::Header const *>(artdaq_Fragment_.dataBeginBytes());
-  }
-
-  Metadata const * metadata_() const { return artdaq_Fragment_.metadata<CAEN2795Fragment::Metadata>(); }
+  bool Verify() const;
 
 private:
 

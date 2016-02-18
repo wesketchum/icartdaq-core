@@ -2,7 +2,7 @@
 #define icartdaq_core_Overlays_FragmentType_hh
 #include "artdaq-core/Data/Fragment.hh"
 
-namespace demo {
+namespace icarus {
 
   namespace detail {
     enum FragmentType : artdaq::Fragment::type_t

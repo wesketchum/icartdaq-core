@@ -10,8 +10,8 @@ namespace {
   names { "MISSED", "CAEN2795","UNKNOWN" };
 }
 
-demo::FragmentType
-demo::toFragmentType(std::string t_string)
+icarus::FragmentType
+icarus::toFragmentType(std::string t_string)
 {
   std::transform(t_string.begin(),
                  t_string.end(),
@@ -25,7 +25,7 @@ demo::toFragmentType(std::string t_string)
 }
 
 std::string
-demo::fragmentTypeToString(FragmentType val)
+icarus::fragmentTypeToString(FragmentType val)
 {
   if (val < FragmentType::INVALID) {
     return names[val - FragmentType::MISSED];
