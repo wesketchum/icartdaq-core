@@ -16,12 +16,9 @@ void icarus::CAEN2795FragmentMetadata::CheckNBoards(size_t i) const {
 }
 
 std::ostream & icarus::operator << (std::ostream & os, CAEN2795FragmentMetadata const& m){
-  os << "\nCAEN2785FragmentMetadata:"
-     << "\n\tReserved marker: " << std::hex << m.reserved() << std::dec
-     << "\n\tRun number: " << m.run_number()
-     << "\n\tSubrun number: " << m.subrun_number()
-     << "\n\tEvent number: " << m.event_number()
-     << "\n\tCrate ID: " << std::hex << m.crate_id() << std::dec
+
+  os << "\nCAEN2785FragmentMetadata:" << std::dec
+     << "\n\tRun Number: " << m.run_number() 
      << "\n\tNumber of ADC bits: " << m.num_adc_bits()
      << "\n\tSamples per channel: " << m.samples_per_channel()
      << "\n\tChannels per board: " << m.channels_per_board()
@@ -31,6 +28,26 @@ std::ostream & icarus::operator << (std::ostream & os, CAEN2795FragmentMetadata 
     os << std::endl;
     return os;
 }
+
+std::ostream & icarus::operator << (std::ostream & os, CAEN2795Stat const & c) {
+  auto const& m = c.stat_pack();
+
+  os << "\nCAEN2785StatBlock" << std::dec
+     << "\n\tSTAT Token: " << m.stat_token()
+     << "\n\tFIFO Status 1: " << std::hex << m.fifo_status_1()
+     << "\n\tFIFO Status 2: " << std::hex << m.fifo_status_2()
+     << "\n\tFIFO Status: " << std::hex << m.fifo_status()
+     << "\n\tAbs time: " << std::dec << m.stat_abs_time()
+     << "\n\tMin time: " << m.stat_min_time()
+     << "\n\tPacket format version: " << m.stat_packet_format_version()
+     << "\n\tCrate id: " << m.crate_id()
+     << "\n\tSize: " << m.size();
+}
+
+std::ostream & icarus::operator << (std::ostream & os, CAEN2795StatFragment const & f) {
+  os << *(f.metadata());
+}
+bool icarus::CAEN2795StatFragment::Verify() const { return true; }
 
 std::ostream & icarus::operator << (std::ostream & os, CAEN2795Fragment const & f) {
   os << "CAEN2795Fragment: "
