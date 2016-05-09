@@ -19,6 +19,7 @@ fcldir      -
 #
 product		version		optional
 artdaq_core	v1_04_20
+ica_base        v00_01_00
 cetbuildtools	v4_14_02	-	only_for_build
 end_product_list
 
@@ -27,15 +28,15 @@ end_product_list
 # s*  - See artdaq_core's product_deps
 # -nq- here means there is no qualifier
 # a "-" here means the dependent product is not required by the parent and will not be setup
-qualifier		artdaq_core
-e7:s15:prof		e7:s15:prof
-e7:s15:debug		e7:s15:debug
-e7:s11:prof		e7:s11:prof
-e7:s11:debug		e7:s11:debug
-e7:s8:prof		e7:s8:prof
-e7:s8:debug		e7:s8:debug
-e6:s8:prof		e6:s8:prof
-e6:s8:debug		e6:s8:debug
+qualifier		ica_base      artdaq_core
+e7:s15:prof		e7:eth:prof       e7:s15:prof
+e7:s15:debug		e7:eth:debug      e7:s15:debug
+e7:s11:prof		e7:eth:prof       e7:s11:prof
+e7:s11:debug		e7:eth:debug      e7:s11:debug
+e7:s8:prof		e7:eth:prof       e7:s8:prof
+e7:s8:debug		e7:eth:debug      e7:se8:debug
+e6:s8:prof		e6:eth:prof       e6:s8:prof
+e6:s8:debug		e6:eth:debug      e6:s8:debug
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:

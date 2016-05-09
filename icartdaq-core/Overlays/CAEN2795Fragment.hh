@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 
+#include "ica_base/structures.h"
+
 // Implementation of "CAEN2795Fragment", an artdaq::Fragment overlay class
 // used for ICARUS DAQ demo
 
@@ -26,41 +28,77 @@ public:
   typedef data_t   id_t; //type for board IDs
 
 
+  struct CAEN2795EventBlock {
+
+    //'EVEN'
+    uint32_t token;
+    
+    uint32_t Run;
+    uint32_t Event;
+    uint32_t ToD;
+    uint32_t AbsTime;
+    
+    //Conf
+    uint32_t pkt_fmt_ver : 8;
+    uint32_t trig_type   : 8;
+    uint32_t n_crates    : 16;
+
+    uint32_t Size;
+
+  };
+
+  struct CAEN2795StatBlock {
+
+    //'STAT'
+    uint32_t token;
+    
+    //memstat1
+    uint32_t fifo_status_1;
+
+    uint32_t fifo_status_2 : 6;
+    uint32_t unused1       : 26;
+
+    uint32_t abstime;
+    uint32_t mintime;
+
+    //crateid
+    uint32_t pkt_fmt_ver : 8;
+    uint32_t crate_id    : 24;
+
+    uint32_t size;
+    
+
+  };
+
+
   CAEN2795FragmentMetadata(){}
 
-  CAEN2795FragmentMetadata(data_t run, data_t subrun, data_t event, 
-			   data_t samples, uint8_t n_adc_bits, 
-			   uint16_t n_channels, uint16_t n_boards, 
-			   data_t crate_id)
-    : _run_number(run), 
-      _subrun_number(subrun),
-      _event_number(event),
-      _samples_per_channel(samples),
-      _num_adc_bits(n_adc_bits),
-      _channels_per_board(n_channels&0xfff),
-      _num_boards(n_boards&0xfff),
-      _crate_id(crate_id),
-      _reserved(0xfcdf)
-  { UpdateBoardIDSize(); }
+  CAEN2795FragmentMetadata(evHead event_header, statpack stat_pack);
 
-  CAEN2795FragmentMetadata(data_t run, data_t subrun, data_t event, 
-			   data_t samples, uint8_t n_adc_bits, 
-			   uint16_t n_channels, uint16_t n_boards, 
-			   data_t crate_id, std::vector<id_t> board_ids)
-    : _run_number(run), 
-      _subrun_number(subrun),
-      _event_number(event),
-      _samples_per_channel(samples),
-      _num_adc_bits(n_adc_bits),
-      _channels_per_board(n_channels&0xfff),
-      _num_boards(n_boards&0xfff),
-      _crate_id(crate_id),
-      _reserved(0xfcdf)
-  { UpdateBoardIDSize(); SetBoardIDs(board_ids); }
+  uint32_t const& ev_token() const { return evhead.token; }
 
-  data_t const& run_number() const { return _run_number; }
-  data_t const& subrun_number() const { return _subrun_number; }
-  data_t const& event_number() const { return _event_number; }
+  data_t   const& run_number() const { return evhead.Run; }
+  data_t   const& event_number() const { return evhead.Event; }
+
+  data_t   const& time_of_day() const { return evhead.ToD; }
+  data_t   const& absolute_time() const { return evhead.AbsTime; }
+
+  uint8_t  const& ev_packet_format_version() const { return evhead.pkt_fmt_ver; }
+  uint8_t  const& trigger_type() const { return evhead.trigg_type; }
+  uint16_t const& n_crates() const { return evhead.n_crates; }
+  
+  uint32_t const& packet_size() const { return evhead.Size; }
+
+
+  uint32_t const& stat_token() const { return statpk.token; }
+  uint32_t const& fifo_status_1() const { return statpk.fifo_status_1; }
+  uint32_t const& fifo_status_2() const { return statpk.fifo_status_2; }
+  uint64_t fifo_status() const { return (( statpk.fifo_status_2 << 32 ) | ( statpk.fifo_status_1 )); }
+
+  uint32_t const& stat_abs_time() const { return statpk.abstime; }
+  uint32_t const& stat_min_time() const { return statpk.mintime; }
+
+  uint8_t  const& stat_packet_format_version() const { return statpk.pkt_fmt_ver; }
 
   data_t const& samples_per_channel() const { return _samples_per_channel; }
   data_t num_adc_bits() const { return _num_adc_bits; }
@@ -114,8 +152,37 @@ private:
 class icarus::CAEN2795Fragment {
   public:
 
-  struct CAEN2795BoardBlock {
+  struct CAEN2795DataBlock {
+
+    //DataTile::Header header;
+
+    //'DATA'
+    uint32_t token;
+
+    //info1
+    uint32_t stop_addr : 16;
+    uint32_t mode      : 16;
     
+    //info2
+    uint32_t dead_peak_mask;
+
+    //info3
+    uint32_t tv_trcr  : 16;
+    uint32_t abs_time : 16;
+
+    //timeinfo
+    uint32_t timeinfo;
+
+    //chID
+    uint32_t pkt_fmt_ver  : 8;
+    uint32_t crate_id     : 8;
+    uint32_t board_id     : 8;
+    uint32_t board_status : 8;
+
+    //packSize
+    uint32_t packSize;
+
+    //data
     uint32_t event_number : 24;
     uint32_t unused1      :  8;
     uint32_t time_stamp;
@@ -123,6 +190,7 @@ class icarus::CAEN2795Fragment {
     uint16_t* data;
     
   };
+
 
   CAEN2795Fragment(artdaq::Fragment const & f) : artdaq_Fragment_(f) {}
 
