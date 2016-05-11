@@ -7,7 +7,7 @@
 
 namespace {
   static std::vector<std::string> const
-  names { "MISSED", "CAEN2795","UNKNOWN" };
+  names { "MISSED", "PHYSCRATEDATA","PHYSCRATESTAT","UNKNOWN" };
 }
 
 icarus::FragmentType
