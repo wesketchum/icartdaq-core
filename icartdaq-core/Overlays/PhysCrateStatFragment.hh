@@ -1,5 +1,5 @@
-#ifndef icartdaq_Overlays_PhysCrateFragment_hh
-#define icartdaq_Overlays_PhysCrateFragment_hh
+#ifndef icartdaq_Overlays_PhysCrateStatFragment_hh
+#define icartdaq_Overlays_PhysCrateStatFragment_hh
 
 #include "artdaq-core/Data/Fragment.hh"
 #include "cetlib/exception.h"
