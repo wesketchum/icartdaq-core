@@ -1,6 +1,6 @@
 #include "icartdaq-core/Overlays/PhysCrateFragment.hh"
 #include "cetlib/exception.h"
-#include "Trace/trace_defines.h"
+#include "icartdaq-core/Trace/trace_defines.h"
 
 void icarus::PhysCrateFragmentMetadata::BoardExists(size_t i) const {
   if(i>_num_boards)
@@ -63,24 +63,25 @@ std::ostream & icarus::operator << (std::ostream & os, PhysCrateFragmentMetadata
     return os;
 }
 
-icarus::PhysCrateDataTileHeader::PhysCrateDataTileHeader( DataTile::Header const& h)
+icarus::PhysCrateDataTileHeader::PhysCrateDataTileHeader( struct DataTile::Header const& h)
 {
-  token          = (*(reinterpret_cast<uint32_t*>(&(h.token))));
-  stop_addr      = (*(reinterpret_cast<uint32_t*>(&(h.info1))) & 0xff00)>>16;
-  mode           = (*(reinterpret_cast<uint32_t*>(&(h.info1))) & 0x00ff);
-  dead_peak_mask = (*(reinterpret_cast<uint32_t*>(&(h.info2))));
-  tv_trcr        = (*(reinterpret_cast<uint32_t*>(&(h.info3))) & 0xff00)>>16;
-  abs_time       = (*(reinterpret_cast<uint32_t*>(&(h.info3))) & 0x00ff);
+
+  token          = (*(reinterpret_cast<const uint32_t*>(&(h.token))));
+  stop_addr      = (*(reinterpret_cast<const uint32_t*>(&(h.info1))) & 0xff00)>>16;
+  mode           = (*(reinterpret_cast<const uint32_t*>(&(h.info1))) & 0x00ff);
+  dead_peak_mask = (*(reinterpret_cast<const uint32_t*>(&(h.info2))));
+  tv_trcr        = (*(reinterpret_cast<const uint32_t*>(&(h.info3))) & 0xff00)>>16;
+  abs_time       = (*(reinterpret_cast<const uint32_t*>(&(h.info3))) & 0x00ff);
   timeinfo       = h.timeinfo;
-  pkt_fmt_ver    = (*(reinterpret_cast<uint32_t*>(&(h.chID))) & 0xf000)>>24;
-  crate_id       = (*(reinterpret_cast<uint32_t*>(&(h.chID))) & 0x0f00)>>16;
-  board_id       = (*(reinterpret_cast<uint32_t*>(&(h.chID))) & 0x00f0)>>8;
-  board_status   = (*(reinterpret_cast<uint32_t*>(&(h.chID))) & 0x000f);
-  packSize       = (*(reinterpret_cast<uint32_t*>(&(h.packSize))));
+  pkt_fmt_ver    = (*(reinterpret_cast<const uint32_t*>(&(h.chID))) & 0xf000)>>24;
+  crate_id       = (*(reinterpret_cast<const uint32_t*>(&(h.chID))) & 0x0f00)>>16;
+  board_id       = (*(reinterpret_cast<const uint32_t*>(&(h.chID))) & 0x00f0)>>8;
+  board_status   = (*(reinterpret_cast<const uint32_t*>(&(h.chID))) & 0x000f);
+  packSize       = (*(reinterpret_cast<const uint32_t*>(&(h.packSize))));
 
 }
 
-std::ostream & icarus::operator << (std::ostream & os, PhysCrateDataTileHeader const & h){
+std::ostream & icarus::operator << (std::ostream & os, struct PhysCrateDataTileHeader const & h){
   os << "\nPhysCrateDataTileHeader: ";
   os << "\n\tToken: " << h.token;
   os << "\n\tStopAddress: " << h.stop_addr;
@@ -88,7 +89,7 @@ std::ostream & icarus::operator << (std::ostream & os, PhysCrateDataTileHeader c
   os << "\n\tDeadalus peak mask: " << h.dead_peak_mask;
   os << "\n\tTV TRCR: " << h.tv_trcr;
   os << "\n\tAbsolute time chunk: " << h.abs_time;
-  os << "\n\tAbsolute trigger time: " << h.time_info;
+  os << "\n\tAbsolute trigger time: " << h.timeinfo;
   os << "\n\tPacket format version: " << h.pkt_fmt_ver;
   os << "\n\tCrate ID: " << h.crate_id;
   os << "\n\tBoard ID: " << h.board_id;
@@ -98,25 +99,10 @@ std::ostream & icarus::operator << (std::ostream & os, PhysCrateDataTileHeader c
   return os;
 }
 
-struct icarus::A2795DataBlock{
-
-  typedef uint32_t header_t;
-  typedef uint16_t data_t;
-
-  typedef struct {
-    header_t event_number : 24;
-    header_t unused1      :  8;
-    header_t time_stamp;
-  } Header;
-
-  Header  header;
-  data_t* data;
-};
-
-std::ostream & icarus::operator << (std::ostream & os, A2795DataBlock const & a){
+std::ostream & icarus::operator << (std::ostream & os, struct A2795DataBlock const & a){
   os << "\nA2795DataBlockHeader: ";
-  os << "\n\tEvent Number : " << event_number;
-  os << "\n\tTime stamp: " << time_stamp;
+  os << "\n\tEvent Number : " << a.header.event_number;
+  os << "\n\tTime stamp: " << a.header.time_stamp;
   return os;
 }
 
@@ -133,12 +119,12 @@ std::ostream & icarus::operator << (std::ostream & os, PhysCrateFragment const &
 
   os << *(f.DataTileHeader());
 
-  if(isCompressed()) return os;
+  if(f.isCompressed()) return os;
 
   os << "\n\tBoardBlockSize: " << f.BoardBlockSize();
 
   for(size_t i_b=0; i_b<f.nBoards(); ++i_b)
-    os << "\n\t\tBoard " << i_b << BoardHeader(ib);
+    os << "\n\t\tBoard " << i_b << f.BoardData(i_b);
 
   os << std::endl;
   return os;
@@ -153,7 +139,7 @@ bool icarus::PhysCrateFragment::Verify() const {
   }
 
   if(artdaq_Fragment_.dataSizeBytes()!=(BoardBlockSize()*nBoards())){
-    TRACE(TR_WARNING,"PhysCrateFragment::Verify : Data size not correct!\n\tObserved=%ul, Expected=%ul\n",
+    TRACE(TR_WARNING,"PhysCrateFragment::Verify : Data size not correct!\n\tObserved=%lu, Expected=%lu\n",
 	  artdaq_Fragment_.dataSizeBytes(),
 	  BoardBlockSize()*nBoards());
     verified=false;
@@ -168,9 +154,9 @@ bool icarus::PhysCrateFragment::Verify() const {
       break;
     }
   if(!boards_agree){
-    TRACE(TR_WARINING,"PhysCrateFragment::Verify : Boards don't agree.");
+    TRACE(TR_WARNING,"PhysCrateFragment::Verify : Boards don't agree.");
     for(size_t i_b=0; i_b<nBoards(); ++i_b)
-      TRACE(TR_WARNING,"\n\tBoard %lu (Event Number,Time Stamp)=(%lu,%lu)" 
+      TRACE(TR_WARNING,"\n\tBoard %lu (Event Number,Time Stamp)=(%u,%u)", 
 	    i_b,BoardEventNumber(i_b),BoardTimeStamp(i_b));
     verified=false;
   }

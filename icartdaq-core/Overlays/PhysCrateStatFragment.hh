@@ -57,7 +57,7 @@ class icarus::PhysCrateStatFragment {
     return ( reinterpret_cast< PhysCrateStatBlock const *>(artdaq_Fragment_.dataBeginBytes()) );
   }
 
-  bool Verify() const { return true; };
+  bool Verify() const;
 
 private:
 

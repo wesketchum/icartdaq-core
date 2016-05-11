@@ -20,10 +20,10 @@ namespace icarus {
   std::ostream & operator << (std::ostream &, PhysCrateFragmentMetadata const&);
 
   struct PhysCrateDataTileHeader;
-  std::ostream & operator << (std::ostream &, PhysCrateDataTileHeader const&);
+  std::ostream & operator << (std::ostream &, struct PhysCrateDataTileHeader const&);
 
   struct A2795DataBlock;
-  std::ostream & operator << (std::ostream &, A2795DataBlock const&);
+  std::ostream & operator << (std::ostream &, struct A2795DataBlock const&);
 }
 
 //same structure that is found in structures.h
@@ -56,7 +56,7 @@ struct icarus::PhysCrateDataTileHeader{
   uint32_t packSize;
 
   PhysCrateDataTileHeader(){};
-  PhysCrateDataTileHeader( DataTile::Header const& );
+  PhysCrateDataTileHeader( struct DataTile::Header const& );
 };
 struct icarus::A2795DataBlock{
 
@@ -160,7 +160,7 @@ class icarus::PhysCrateFragment {
     return ( reinterpret_cast< PhysCrateDataTileHeader const *>(artdaq_Fragment_.dataBeginBytes()) );
   }
 
-  size_t BoardBlockSize() const { return sizeof(A2795DataBlock::Header)++nChannelsPerBoard()*nSamplesPerChannel()*sizeof(A2795DataBlock::data_t); }
+  size_t BoardBlockSize() const { return sizeof(A2795DataBlock::Header)+nChannelsPerBoard()*nSamplesPerChannel()*sizeof(A2795DataBlock::data_t); }
 
   A2795DataBlock           const* BoardDataBlock(uint16_t b=0) const;
   A2795DataBlock::Header   const& BoardHeader(uint16_t b=0) const;
