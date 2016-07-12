@@ -26,7 +26,8 @@ icarus::A2795DataBlock const * icarus::PhysCrateFragment::BoardDataBlock(uint16_
   metadata()->BoardExists(b);
   if(b!=0) throwIfCompressed();
   return ( reinterpret_cast< A2795DataBlock const *>
-	   (artdaq_Fragment_.dataBeginBytes() + sizeof(PhysCrateDataTileHeader) + b*BoardBlockSize()) );
+	   (artdaq_Fragment_.dataBeginBytes() + sizeof(PhysCrateDataTileHeader) +
+	    b*(sizeof(PhysCrateDataTileHeader) + 4*sizeof(uint16_t) + BoardBlockSize())) );
 }
 
 icarus::A2795DataBlock::Header const& icarus::PhysCrateFragment::BoardHeader(uint16_t b) const {
@@ -42,8 +43,13 @@ icarus::A2795DataBlock::header_t icarus::PhysCrateFragment::BoardTimeStamp(uint1
 }
 
 icarus::A2795DataBlock::data_t const* icarus::PhysCrateFragment::BoardData(uint16_t b) const{
-  return BoardDataBlock(b)->data;
+  //return (reinterpret_cast<A2795DataBlock::data_t const *>(BoardDataBlock(b)->data));
+  return ( reinterpret_cast< A2795DataBlock::data_t const *>
+	   (artdaq_Fragment_.dataBeginBytes() + sizeof(PhysCrateDataTileHeader)
+	    + b*(sizeof(PhysCrateDataTileHeader) + 4*sizeof(uint16_t) + BoardBlockSize())
+	    + sizeof(A2795DataBlock::Header)) );  
 }
+
 icarus::A2795DataBlock::data_t icarus::PhysCrateFragment::adc_val(size_t b,size_t c, size_t s) const{
   return ( *(BoardData(b)+s*nChannelsPerBoard()+c) & (~(1<<(metadata()->num_adc_bits()+1))) );
 }
