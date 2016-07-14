@@ -119,8 +119,10 @@ public:
   void CheckNBoards(size_t i) const;
 
   size_t ExpectedDataSize() const 
-  { return sizeof(PhysCrateDataTileHeader) + 
-      _num_boards*(sizeof(A2795DataBlock::Header)+_channels_per_board*_samples_per_channel*sizeof(A2795DataBlock::data_t)); }
+  { return _num_boards*(sizeof(PhysCrateDataTileHeader) +
+			sizeof(A2795DataBlock::Header) +
+			_channels_per_board*_samples_per_channel*sizeof(A2795DataBlock::data_t) +
+			2*sizeof(uint32_t)); }
 
 
 private:
@@ -156,11 +158,11 @@ class icarus::PhysCrateFragment {
 
   size_t DataPayloadSize() const { return artdaq_Fragment_.dataSizeBytes(); }
 
-  PhysCrateDataTileHeader const * DataTileHeader() const {
-    return ( reinterpret_cast< PhysCrateDataTileHeader const *>(artdaq_Fragment_.dataBeginBytes()) );
-  }
+  PhysCrateDataTileHeader const * DataTileHeader(uint16_t b=0) const;
+  size_t DataTileHeaderLocation(uint16_t b=0) const;
 
-  size_t BoardBlockSize() const { return sizeof(A2795DataBlock::Header)+nChannelsPerBoard()*nSamplesPerChannel()*sizeof(A2795DataBlock::data_t); }
+  size_t BoardBlockSize() const
+  { return sizeof(A2795DataBlock::Header)+nChannelsPerBoard()*nSamplesPerChannel()*sizeof(A2795DataBlock::data_t); }
 
   A2795DataBlock           const* BoardDataBlock(uint16_t b=0) const;
   A2795DataBlock::Header   const& BoardHeader(uint16_t b=0) const;

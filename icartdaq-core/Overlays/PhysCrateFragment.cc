@@ -2,6 +2,8 @@
 #include "cetlib/exception.h"
 #include "icartdaq-core/Trace/trace_defines.h"
 
+#include <arpa/inet.h>
+
 void icarus::PhysCrateFragmentMetadata::BoardExists(size_t i) const {
   if(i>_num_boards)
     throw cet::exception("PhysCrateFragmentMetadata::BoardExists") << 
@@ -22,12 +24,25 @@ void icarus::PhysCrateFragment::throwIfCompressed() const {
 
 }
 
+size_t icarus::PhysCrateFragment::DataTileHeaderLocation(uint16_t b) const {
+  metadata()->BoardExists(b);
+  size_t blocks_skipped_size=0;
+  for(size_t i_b=0; i_b<b; ++i_b){
+    auto dt_header = reinterpret_cast< PhysCrateDataTileHeader const *>(artdaq_Fragment_.dataBeginBytes()+blocks_skipped_size);
+    blocks_skipped_size += ntohl(dt_header->packSize);
+  }
+  return blocks_skipped_size;
+}
+
+icarus::PhysCrateDataTileHeader const * icarus::PhysCrateFragment::DataTileHeader(uint16_t b) const {
+  metadata()->BoardExists(b);
+  return ( reinterpret_cast< PhysCrateDataTileHeader const *>(artdaq_Fragment_.dataBeginBytes()+DataTileHeaderLocation(b)) );
+}
+
 icarus::A2795DataBlock const * icarus::PhysCrateFragment::BoardDataBlock(uint16_t b) const {
   metadata()->BoardExists(b);
-  if(b!=0) throwIfCompressed();
   return ( reinterpret_cast< A2795DataBlock const *>
-	   (artdaq_Fragment_.dataBeginBytes() + sizeof(PhysCrateDataTileHeader) +
-	    b*(sizeof(PhysCrateDataTileHeader) + 4*sizeof(uint16_t) + BoardBlockSize())) );
+	   (artdaq_Fragment_.dataBeginBytes() + DataTileHeaderLocation(b) + sizeof(PhysCrateDataTileHeader)));
 }
 
 icarus::A2795DataBlock::Header const& icarus::PhysCrateFragment::BoardHeader(uint16_t b) const {
