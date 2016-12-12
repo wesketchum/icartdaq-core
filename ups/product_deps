@@ -1,7 +1,7 @@
 # The parent line must be the first non-comment line in the file
 # This line defines the product name and version
-parent icartdaq_core		v0_01_00
-defaultqual	e7:s15
+parent icartdaq_core		v0_02_00
+defaultqual	e10
 
 # These optional lines define the installed directories where
 # headers, libraries, and executables will be found
@@ -18,10 +18,11 @@ fcldir      -
 
 #
 product		version		optional
-artdaq_core	v1_04_20
-TRACE           v3_05_00
-ica_base        v00_01_00
-cetbuildtools	v4_14_02	-	only_for_build
+artdaq_core	v1_05_09
+TRACE           v3_06_07
+ica_base        v00_02_00
+cetbuildtools	v5_04_03	-	only_for_build
+gcc		v4_9_3a
 end_product_list
 
 # e6  - with gcc 4.9.1 and -std=c++1y
@@ -29,17 +30,9 @@ end_product_list
 # s*  - See artdaq_core's product_deps
 # -nq- here means there is no qualifier
 # a "-" here means the dependent product is not required by the parent and will not be setup
-qualifier		ica_base          artdaq_core   TRACE
-e7:s15:prof		e7:eth:prof       e7:s15:prof	e7
-e7:s15:debug		e7:eth:debug      e7:s15:debug	e7
-e7:s11:prof		e7:eth:prof       e7:s11:prof	e7
-e7:s11:debug		e7:eth:debug      e7:s11:debug	e7
-e7:s8:prof		e7:eth:prof       e7:s8:prof	e7
-e7:s8:debug		e7:eth:debug      e7:se8:debug	e7
-e6:s8:prof		e6:eth:prof       e6:s8:prof	e6
-e6:s8:debug		e6:eth:debug      e6:s8:debug	e6
-end_qualifier_list
-
+qualifier		ica_base       artdaq_core      TRACE
+e10:prof		e10:prof       e10:s41:prof	e10:prof
+e10:debug		e10:debug      e10:s41:debug	e10:prof
 # Preserve tabs and formatting in emacs and vi / vim:
 
 ### Local Variables:
